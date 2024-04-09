@@ -1,8 +1,12 @@
+from __future__ import annotations
+
+from typing import Iterable, Reversible
+
 from rply.errors import ParserGeneratorError
 from rply.utils import iteritems
 
 
-def rightmost_terminal(symbols, terminals):
+def rightmost_terminal(symbols: Reversible, terminals: Iterable):
     for sym in reversed(symbols):
         if sym in terminals:
             return sym

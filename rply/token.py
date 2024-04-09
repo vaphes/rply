@@ -1,4 +1,8 @@
-class BaseBox(object):
+from dataclasses import dataclass, field
+
+
+@dataclass
+class BaseBox:
     """
     A base class for polymorphic boxes that wrap parser results. Simply use
     this as a base class for anything you return in a production function of a
@@ -6,10 +10,29 @@ class BaseBox(object):
     to always return objects of the same type.
     """
 
-    _attrs_ = []
+    _attrs_: list = field(default_factory=list)
 
 
-class Token(BaseBox):
+@dataclass
+class SourcePosition:
+    """
+    Represents the position of a character in some source string.
+
+    :param idx: The index of the character in the source.
+    :param lineno: The number of the line in which the character occurs.
+    :param colno: The number of the column in which the character occurs.
+
+    The values passed to this object can be retrieved using the identically
+    named attributes.
+    """
+
+    idx: int
+    lineno: int
+    colno: int
+
+
+@dataclass
+class Token:
     """
     Represents a syntactically relevant piece of text.
 
@@ -20,13 +43,9 @@ class Token(BaseBox):
                        this token was generated.
     """
 
-    def __init__(self, name, value, source_pos=None):
-        self.name = name
-        self.value = value
-        self.source_pos = source_pos
-
-    def __repr__(self):
-        return "Token(%r, %r)" % (self.name, self.value)
+    name: str
+    value: str
+    source_pos: SourcePosition | None = None
 
     def __eq__(self, other):
         if not isinstance(other, Token):
@@ -51,26 +70,3 @@ class Token(BaseBox):
         Returns the string represented by this token.
         """
         return self.value
-
-
-class SourcePosition(object):
-    """
-    Represents the position of a character in some source string.
-
-    :param idx: The index of the character in the source.
-    :param lineno: The number of the line in which the character occurs.
-    :param colno: The number of the column in which the character occurs.
-
-    The values passed to this object can be retrieved using the identically
-    named attributes.
-    """
-
-    def __init__(self, idx, lineno, colno):
-        self.idx = idx
-        self.lineno = lineno
-        self.colno = colno
-
-    def __repr__(self):
-        return "SourcePosition(idx={0}, lineno={1}, colno={2})".format(
-            self.idx, self.lineno, self.colno
-        )

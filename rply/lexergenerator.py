@@ -1,53 +1,26 @@
 import re
+from dataclasses import dataclass
 
-# try:
-#     import rpython
-#     from rpython.rlib.objectmodel import we_are_translated
-#     from rpython.rlib.rsre import rsre_core
-#     from rpython.rlib.rsre.rpy import get_code
-# except ImportError:
-#     rpython = None
-#     def we_are_translated():
-#         return False
 from rply.lexer import Lexer
 
 
-class Rule(object):
-    _attrs_ = ["name", "flags", "_pattern"]
+@dataclass
+class Match:
+    start: int
+    end: int
 
-    def __init__(self, name, pattern, flags=0):
+
+class Rule:
+    def __init__(self, name: str, pattern: str, flags: int = 0):
         self.name = name
         self.re = re.compile(pattern, flags=flags)
-        # if rpython:
-        #     self._pattern = get_code(pattern, flags)
 
-    def _freeze_(self):
-        return True
-
-    def matches(self, s, pos):
-        # if not we_are_translated():
+    def matches(self, s: str, pos: int):
         m = self.re.match(s, pos)
         return Match(*m.span(0)) if m is not None else None
-        # else:
-        #     assert pos >= 0
-        #     ctx = rsre_core.StrMatchContext(s, pos, len(s))
-
-        #     matched = rsre_core.match_context(ctx, self._pattern)
-        #     if matched:
-        #         return Match(ctx.match_start, ctx.match_end)
-        #     else:
-        #         return None
 
 
-class Match(object):
-    _attrs_ = ["start", "end"]
-
-    def __init__(self, start, end):
-        self.start = start
-        self.end = end
-
-
-class LexerGenerator(object):
+class LexerGenerator:
     r"""
     A LexerGenerator represents a set of rules that match pieces of text that
     should either be turned into tokens or ignored by the lexer.
@@ -88,14 +61,14 @@ class LexerGenerator(object):
         self.rules = []
         self.ignore_rules = []
 
-    def add(self, name, pattern, flags=0):
+    def add(self, name: str, pattern: str, flags: int = 0):
         """
         Adds a rule with the given `name` and `pattern`. In case of ambiguity,
         the first rule added wins.
         """
         self.rules.append(Rule(name, pattern, flags=flags))
 
-    def ignore(self, pattern, flags=0):
+    def ignore(self, pattern: str, flags: int = 0):
         """
         Adds a rule whose matched value will be ignored. Ignored rules will be
         matched before regular ones.
