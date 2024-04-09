@@ -2,18 +2,6 @@ from dataclasses import dataclass, field
 
 
 @dataclass
-class BaseBox:
-    """
-    A base class for polymorphic boxes that wrap parser results. Simply use
-    this as a base class for anything you return in a production function of a
-    parser. This is necessary because RPython unlike Python expects functions
-    to always return objects of the same type.
-    """
-
-    _attrs_: list = field(default_factory=list)
-
-
-@dataclass
 class SourcePosition:
     """
     Represents the position of a character in some source string.
@@ -45,7 +33,7 @@ class Token:
 
     name: str
     value: str
-    source_pos: SourcePosition | None = None
+    source_pos: SourcePosition | None = field(default=None, repr=False)
 
     def __eq__(self, other):
         if not isinstance(other, Token):
