@@ -1,12 +1,21 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Callable
+
 from rply.errors import ParsingError
 
+if TYPE_CHECKING:
+    from rply.lexer import LexerStream
+    from rply.parsergenerator import LRTable
 
-class LRParser(object):
-    def __init__(self, lr_table, error_handler):
-        self.lr_table = lr_table
-        self.error_handler = error_handler
 
-    def parse(self, tokenizer, state=None):
+@dataclass
+class LRParser:
+    lr_table: LRTable
+    error_handler: Callable
+
+    def parse(self, tokenizer: LexerStream, state=None):
         from rply.token import Token
 
         lookahead = None
@@ -60,7 +69,7 @@ class LRParser(object):
                         self.error_handler(state, lookahead)
                     raise AssertionError("For now, error_handler must raise.")
                 else:
-                    raise ParsingError(None, lookahead.getsourcepos())
+                    raise ParsingError("", lookahead.getsourcepos())
 
     def _reduce_production(self, t, symstack, statestack, state):
         # reduce a symbol on the stack and emit a production

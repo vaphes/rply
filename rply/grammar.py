@@ -1,51 +1,56 @@
 from __future__ import annotations
 
-from typing import Iterable, Reversible
+from typing import Callable, Literal
 
 from rply.errors import ParserGeneratorError
 from rply.utils import iteritems
 
 
-def rightmost_terminal(symbols: Reversible, terminals: Iterable):
+def rightmost_terminal(symbols: list[str], terminals: dict[str, list]):
     for sym in reversed(symbols):
         if sym in terminals:
             return sym
     return None
 
 
-class Grammar(object):
-    def __init__(self, terminals):
+class Grammar:
+    def __init__(self, terminals: list[str]):
         # A list of all the productions
-        self.productions = [None]
+        self.productions: list[Production | None] = [None]
         # A dictionary mapping the names of non-terminals to a list of all
         # productions of that nonterminal
-        self.prod_names = {}
+        self.prod_names: dict[str, list] = {}
         # A dictionary mapping the names of terminals to a list of the rules
         # where they are used
-        self.terminals = dict((t, []) for t in terminals)
+        self.terminals: dict[str, list[int]] = dict((t, []) for t in terminals)
         self.terminals["error"] = []
         # A dictionary mapping names of nonterminals to a list of rule numbers
         # where they are used
-        self.nonterminals = {}
+        self.nonterminals: dict[str, list[int]] = {}
         self.first = {}
         self.follow = {}
-        self.precedence = {}
+        self.precedence: dict[str, tuple[str, int]] = {}
         self.start = None
 
-    def add_production(self, prod_name, syms, func, precedence):
+    def add_production(
+        self, prod_name: str, syms: list[str], func: Callable, precedence: str | None
+    ):
         if prod_name in self.terminals:
-            raise ParserGeneratorError("Illegal rule name %r" % prod_name)
+            raise ParserGeneratorError(f"Illegal rule name {prod_name}")
 
         if precedence is None:
             precname = rightmost_terminal(syms, self.terminals)
-            prod_prec = self.precedence.get(precname, ("right", 0))
+            if precname is None:
+                prod_prec = ("right", 0)
+            else:
+                prod_prec = self.precedence.get(precname, ("right", 0))
         else:
             try:
                 prod_prec = self.precedence[precedence]
             except KeyError:
-                raise ParserGeneratorError("Precedence %r doesn't exist" % precedence)
+                raise ParserGeneratorError(f"Precedence {precedence} doesn't exist")
 
-        pnumber = len(self.productions)
+        pnumber: int = len(self.productions)
         self.nonterminals.setdefault(prod_name, [])
 
         for t in syms:
@@ -59,7 +64,9 @@ class Grammar(object):
 
         self.prod_names.setdefault(prod_name, []).append(p)
 
-    def set_precedence(self, term, assoc, level):
+    def set_precedence(
+        self, term: str, assoc: Literal["left", "right", "nonassoc"], level: int
+    ):
         if term in self.precedence:
             raise ParserGeneratorError("Precedence already specified for %s" % term)
         if assoc not in ["left", "right", "nonassoc"]:
@@ -69,6 +76,10 @@ class Grammar(object):
         self.precedence[term] = (assoc, level)
 
     def set_start(self):
+        if len(self.productions) < 2:
+            raise ParserGeneratorError("Grammar must contain at least one rule")
+        if self.productions[1] is None:
+            raise ParserGeneratorError("Grammar has no start symbol")
         start = self.productions[1].name
         self.productions[0] = Production(0, "S'", [start], ("right", 0), None)
         self.nonterminals[start].append(0)
@@ -87,30 +98,34 @@ class Grammar(object):
         Walks the list of productions and builds a complete set of the LR
         items.
         """
-        for p in self.productions:
-            lastlri = p
+        for production in self.productions:
+            if production is None:
+                continue
+            lastlri = production
             i = 0
-            lr_items = []
+            lr_items: list[LRItem] = []
             while True:
-                if i > p.getlength():
+                if i > len(production):
                     lri = None
                 else:
                     try:
-                        before = p.prod[i - 1]
+                        before = production.prod[i - 1]
                     except IndexError:
                         before = None
                     try:
-                        after = self.prod_names[p.prod[i]]
+                        after = self.prod_names[production.prod[i]]
                     except (IndexError, KeyError):
                         after = []
-                    lri = LRItem(p, i, before, after)
+                    lri = LRItem(production, i, before, after)
+
                 lastlri.lr_next = lri
+
                 if lri is None:
                     break
                 lr_items.append(lri)
                 lastlri = lri
                 i += 1
-            p.lr_items = lr_items
+            production.lr_items = lr_items
 
     def _first(self, beta):
         result = []
@@ -175,33 +190,42 @@ class Grammar(object):
                                     added = True
 
 
-class Production(object):
-    def __init__(self, num, name, prod, precedence, func):
+class Production:
+    def __init__(
+        self,
+        num: int,
+        name: str,
+        prod: list[str],
+        precedence: tuple[str, int],
+        func: Callable | None,
+    ):
         self.name = name
         self.prod = prod
         self.number = num
         self.func = func
         self.prec = precedence
-
-        self.unique_syms = []
-        for s in self.prod:
-            if s not in self.unique_syms:
-                self.unique_syms.append(s)
-
-        self.lr_items = []
-        self.lr_next = None
+        self.unique_syms = list(set(prod))
+        self.lr_items: list[LRItem] = []
+        self.lr_next: LRItem | None = None
         self.lr0_added = 0
         self.reduced = 0
 
     def __repr__(self):
-        return "Production(%s -> %s)" % (self.name, " ".join(self.prod))
+        prods = " ".join(self.prod)
+        return f"Production({self.name} -> {prods})"
 
     def getlength(self):
         return len(self.prod)
 
+    def __len__(self):
+        return len(self.prod)
 
-class LRItem(object):
-    def __init__(self, p, n, before, after):
+    def set_lr_next(self, lr_next: LRItem | None):
+        self.lr_next = lr_next
+
+
+class LRItem:
+    def __init__(self, p: Production, n: int, before, after):
         self.name = p.name
         self.prod = p.prod[:]
         self.prod.insert(n, ".")
@@ -213,7 +237,11 @@ class LRItem(object):
         self.lr_after = after
 
     def __repr__(self):
-        return "LRItem(%s -> %s)" % (self.name, " ".join(self.prod))
+        prods = " ".join(self.prod)
+        return f"LRItem({self.name} -> {prods})"
 
     def getlength(self):
+        return len(self.prod)
+
+    def __len__(self):
         return len(self.prod)

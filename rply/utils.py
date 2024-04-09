@@ -1,20 +1,24 @@
+from __future__ import annotations
+
 from collections.abc import MutableMapping
+from dataclasses import dataclass
+from typing import Any
 
 
 class IdentityDict(MutableMapping):
     def __init__(self):
-        self._contents = {}
-        self._keepalive = []
+        self._contents: dict[int, Any] = {}
+        self._keepalive: list[Any] = []
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: Any):
         return self._contents[id(key)][1]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: Any, value: Any):
         idx = len(self._keepalive)
         self._keepalive.append(key)
         self._contents[id(key)] = key, value, idx
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: Any):
         del self._contents[id(key)]
         for idx, obj in enumerate(self._keepalive):
             if obj is key:
@@ -29,17 +33,17 @@ class IdentityDict(MutableMapping):
             yield key
 
 
-class Counter(object):
-    def __init__(self):
-        self.value = 0
+@dataclass
+class Counter:
+    value: int = 0
 
     def incr(self):
         self.value += 1
 
 
-def itervalues(d):
+def itervalues(d: dict):
     return d.values()
 
 
-def iteritems(d):
+def iteritems(d: dict):
     return d.items()

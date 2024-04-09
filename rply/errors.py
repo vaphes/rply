@@ -34,7 +34,7 @@ class ParsingError(Exception):
     Raised by a Parser, if no production rule can be applied.
     """
 
-    def __init__(self, message: str, source_pos: SourcePosition):
+    def __init__(self, message: str, source_pos: SourcePosition | None = None):
         self.message = message
         self.source_pos = source_pos
 

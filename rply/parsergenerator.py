@@ -5,6 +5,7 @@ import os
 import sys
 import tempfile
 import warnings
+from typing import Callable, Literal
 
 from appdirs import AppDirs
 
@@ -33,14 +34,19 @@ class ParserGenerator(object):
 
     VERSION = 1
 
-    def __init__(self, tokens, precedence=[], cache_id=None):
+    def __init__(
+        self,
+        tokens: list[str],
+        precedence: list[tuple[Literal["left", "right", "nonassoc"], list[str]]] = [],
+        cache_id: str | None = None,
+    ):
         self.tokens = tokens
         self.productions = []
         self.precedence = precedence
         self.cache_id = cache_id
         self.error_handler = None
 
-    def production(self, rule, precedence=None):
+    def production(self, rule: str, precedence=None):
         """
         A decorator that defines one or many production rules and registers
         the decorated function to be called with the terminals and
@@ -87,7 +93,7 @@ class ParserGenerator(object):
 
         return inner
 
-    def error(self, func):
+    def error(self, func: Callable):
         """
         Sets the error handler that is called with the state (if passed to the
         parser) and the token the parser errored on.
