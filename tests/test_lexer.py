@@ -145,11 +145,11 @@ class TestLexer(object):
 
         l = lg.build()
 
-        stream = l.lex('fail')
+        stream = l.lex("fail")
         with raises(LexingError) as excinfo:
             stream.next()
 
-        assert 'SourcePosition(' in repr(excinfo.value)
+        assert "SourcePosition(" in repr(excinfo.value)
 
     def test_error_line_number(self):
         lg = LexerGenerator()

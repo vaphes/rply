@@ -5,6 +5,7 @@ class BaseBox(object):
     parser. This is necessary because RPython unlike Python expects functions
     to always return objects of the same type.
     """
+
     _attrs_ = []
 
 
@@ -18,6 +19,7 @@ class Token(BaseBox):
                        position of the first character in the source from which
                        this token was generated.
     """
+
     def __init__(self, name, value, source_pos=None):
         self.name = name
         self.value = value
@@ -62,6 +64,7 @@ class SourcePosition(object):
     The values passed to this object can be retrieved using the identically
     named attributes.
     """
+
     def __init__(self, idx, lineno, colno):
         self.idx = idx
         self.lineno = lineno

@@ -38,16 +38,12 @@ class TestParser(BaseTests):
         def expr_num(p):
             return BoxInt(int(p[0].getstr()))
 
-        with self.assert_warns(
-            ParserGeneratorWarning, "1 shift/reduce conflict"
-        ):
+        with self.assert_warns(ParserGeneratorWarning, "1 shift/reduce conflict"):
             parser = pg.build()
 
-        assert parser.parse(iter([
-            Token("NUMBER", "1"),
-            Token("PLUS", "+"),
-            Token("NUMBER", "4")
-        ])) == BoxInt(5)
+        assert parser.parse(
+            iter([Token("NUMBER", "1"), Token("PLUS", "+"), Token("NUMBER", "4")])
+        ) == BoxInt(5)
 
     def test_null_production(self):
         pg = ParserGenerator(["VALUE", "SPACE"])
@@ -73,21 +69,28 @@ class TestParser(BaseTests):
             return None
 
         parser = pg.build()
-        assert parser.parse(iter([
-            Token("VALUE", "abc"),
-            Token("SPACE", " "),
-            Token("VALUE", "def"),
-            Token("SPACE", " "),
-            Token("VALUE", "ghi"),
-        ])) == ["abc", "def", "ghi"]
+        assert parser.parse(
+            iter(
+                [
+                    Token("VALUE", "abc"),
+                    Token("SPACE", " "),
+                    Token("VALUE", "def"),
+                    Token("SPACE", " "),
+                    Token("VALUE", "ghi"),
+                ]
+            )
+        ) == ["abc", "def", "ghi"]
 
         assert parser.parse(iter([])) == []
 
     def test_precedence(self):
-        pg = ParserGenerator(["NUMBER", "PLUS", "TIMES"], precedence=[
-            ("left", ["PLUS"]),
-            ("left", ["TIMES"]),
-        ])
+        pg = ParserGenerator(
+            ["NUMBER", "PLUS", "TIMES"],
+            precedence=[
+                ("left", ["PLUS"]),
+                ("left", ["TIMES"]),
+            ],
+        )
 
         @pg.production("main : expr")
         def main(p):
@@ -96,10 +99,11 @@ class TestParser(BaseTests):
         @pg.production("expr : expr PLUS expr")
         @pg.production("expr : expr TIMES expr")
         def expr_binop(p):
-            return BoxInt({
-                "+": operator.add,
-                "*": operator.mul
-            }[p[1].getstr()](p[0].getint(), p[2].getint()))
+            return BoxInt(
+                {"+": operator.add, "*": operator.mul}[p[1].getstr()](
+                    p[0].getint(), p[2].getint()
+                )
+            )
 
         @pg.production("expr : NUMBER")
         def expr_num(p):
@@ -107,18 +111,25 @@ class TestParser(BaseTests):
 
         parser = pg.build()
 
-        assert parser.parse(iter([
-            Token("NUMBER", "3"),
-            Token("TIMES", "*"),
-            Token("NUMBER", "4"),
-            Token("PLUS", "+"),
-            Token("NUMBER", "5")
-        ])) == BoxInt(17)
+        assert parser.parse(
+            iter(
+                [
+                    Token("NUMBER", "3"),
+                    Token("TIMES", "*"),
+                    Token("NUMBER", "4"),
+                    Token("PLUS", "+"),
+                    Token("NUMBER", "5"),
+                ]
+            )
+        ) == BoxInt(17)
 
     def test_per_rule_precedence(self):
-        pg = ParserGenerator(["NUMBER", "MINUS"], precedence=[
-            ("right", ["UMINUS"]),
-        ])
+        pg = ParserGenerator(
+            ["NUMBER", "MINUS"],
+            precedence=[
+                ("right", ["UMINUS"]),
+            ],
+        )
 
         @pg.production("main : expr")
         def main_expr(p):
@@ -136,17 +147,19 @@ class TestParser(BaseTests):
         def expr_number(p):
             return BoxInt(int(p[0].getstr()))
 
-        with self.assert_warns(
-            ParserGeneratorWarning, "1 shift/reduce conflict"
-        ):
+        with self.assert_warns(ParserGeneratorWarning, "1 shift/reduce conflict"):
             parser = pg.build()
 
-        assert parser.parse(iter([
-            Token("MINUS", "-"),
-            Token("NUMBER", "4"),
-            Token("MINUS", "-"),
-            Token("NUMBER", "5"),
-        ])) == BoxInt(-9)
+        assert parser.parse(
+            iter(
+                [
+                    Token("MINUS", "-"),
+                    Token("NUMBER", "4"),
+                    Token("MINUS", "-"),
+                    Token("NUMBER", "5"),
+                ]
+            )
+        ) == BoxInt(-9)
 
     def test_parse_error(self):
         pg = ParserGenerator(["VALUE"])
@@ -158,13 +171,17 @@ class TestParser(BaseTests):
         parser = pg.build()
 
         with py.test.raises(ParsingError) as exc_info:
-            parser.parse(iter([
-                Token("VALUE", "hello"),
-                Token("VALUE", "world", SourcePosition(5, 10, 2)),
-            ]))
+            parser.parse(
+                iter(
+                    [
+                        Token("VALUE", "hello"),
+                        Token("VALUE", "world", SourcePosition(5, 10, 2)),
+                    ]
+                )
+            )
 
         assert exc_info.value.getsourcepos().lineno == 10
-        assert 'SourcePosition' in repr(exc_info.value)
+        assert "SourcePosition" in repr(exc_info.value)
 
     def test_parse_error_handler(self):
         pg = ParserGenerator(["VALUE"])
@@ -182,17 +199,17 @@ class TestParser(BaseTests):
         token = Token("VALUE", "world")
 
         with py.test.raises(ValueError) as exc_info:
-            parser.parse(iter([
-                Token("VALUE", "hello"),
-                token
-            ]))
+            parser.parse(iter([Token("VALUE", "hello"), token]))
 
         assert exc_info.value.args[0] is token
 
     def test_state(self):
-        pg = ParserGenerator(["NUMBER", "PLUS"], precedence=[
-            ("left", ["PLUS"]),
-        ])
+        pg = ParserGenerator(
+            ["NUMBER", "PLUS"],
+            precedence=[
+                ("left", ["PLUS"]),
+            ],
+        )
 
         @pg.production("main : expression")
         def main(state, p):
@@ -212,13 +229,18 @@ class TestParser(BaseTests):
         parser = pg.build()
 
         state = ParserState()
-        assert parser.parse(iter([
-            Token("NUMBER", "10"),
-            Token("PLUS", "+"),
-            Token("NUMBER", "12"),
-            Token("PLUS", "+"),
-            Token("NUMBER", "-2"),
-        ]), state=state) == BoxInt(20)
+        assert parser.parse(
+            iter(
+                [
+                    Token("NUMBER", "10"),
+                    Token("PLUS", "+"),
+                    Token("NUMBER", "12"),
+                    Token("PLUS", "+"),
+                    Token("NUMBER", "-2"),
+                ]
+            ),
+            state=state,
+        ) == BoxInt(20)
         assert state.count == 6
 
     def test_error_handler_state(self):
@@ -245,9 +267,7 @@ class TestParser(BaseTests):
     def test_default_reductions(self):
         pg = ParserGenerator(
             ["INTEGER_START", "INTEGER_VALUE", "COMPARE"],
-            precedence=[
-                ("nonassoc", ["COMPARE"])
-            ]
+            precedence=[("nonassoc", ["COMPARE"])],
         )
         record = []
 
@@ -268,13 +288,18 @@ class TestParser(BaseTests):
 
         parser = pg.build()
 
-        assert parser.parse(RecordingLexer(record, [
-            Token("INTEGER_START", ""),
-            Token("INTEGER_VALUE", "10"),
-            Token("COMPARE", "-"),
-            Token("INTEGER_START", ""),
-            Token("INTEGER_VALUE", "5")
-        ])) == BoxInt(5)
+        assert parser.parse(
+            RecordingLexer(
+                record,
+                [
+                    Token("INTEGER_START", ""),
+                    Token("INTEGER_VALUE", "10"),
+                    Token("COMPARE", "-"),
+                    Token("INTEGER_START", ""),
+                    Token("INTEGER_VALUE", "5"),
+                ],
+            )
+        ) == BoxInt(5)
 
         assert record == [
             "token:INTEGER_START",

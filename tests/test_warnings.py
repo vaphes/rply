@@ -6,10 +6,19 @@ from .base import BaseTests
 
 class TestWarnings(BaseTests):
     def test_shift_reduce(self):
-        pg = ParserGenerator([
-            "NAME", "NUMBER", "EQUALS", "PLUS", "MINUS", "TIMES", "DIVIDE",
-            "LPAREN", "RPAREN"
-        ])
+        pg = ParserGenerator(
+            [
+                "NAME",
+                "NUMBER",
+                "EQUALS",
+                "PLUS",
+                "MINUS",
+                "TIMES",
+                "DIVIDE",
+                "LPAREN",
+                "RPAREN",
+            ]
+        )
 
         @pg.production("statement : NAME EQUALS expression")
         def statement_assign(p):
@@ -42,9 +51,7 @@ class TestWarnings(BaseTests):
         def expression_name(p):
             pass
 
-        with self.assert_warns(
-            ParserGeneratorWarning, "20 shift/reduce conflicts"
-        ):
+        with self.assert_warns(ParserGeneratorWarning, "20 shift/reduce conflicts"):
             pg.build()
 
     def test_reduce_reduce(self):
@@ -63,9 +70,7 @@ class TestWarnings(BaseTests):
         def expression(p):
             pass
 
-        with self.assert_warns(
-            ParserGeneratorWarning, "1 reduce/reduce conflict"
-        ):
+        with self.assert_warns(ParserGeneratorWarning, "1 reduce/reduce conflict"):
             pg.build()
 
     def test_unused_tokens(self):
@@ -75,9 +80,7 @@ class TestWarnings(BaseTests):
         def main(p):
             return p[0]
 
-        with self.assert_warns(
-            ParserGeneratorWarning, "Token 'OTHER' is unused"
-        ):
+        with self.assert_warns(ParserGeneratorWarning, "Token 'OTHER' is unused"):
             pg.build()
 
     def test_unused_production(self):

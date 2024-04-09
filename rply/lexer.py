@@ -50,13 +50,10 @@ class LexerStream(object):
                 lineno = self._lineno
                 self._colno = self._update_pos(match)
                 source_pos = SourcePosition(match.start, lineno, self._colno)
-                token = Token(
-                    rule.name, self.s[match.start:match.end], source_pos
-                )
+                token = Token(rule.name, self.s[match.start : match.end], source_pos)
                 return token
         else:
-            raise LexingError(None, SourcePosition(
-                self.idx, self._lineno, self._colno))
+            raise LexingError(None, SourcePosition(self.idx, self._lineno, self._colno))
 
     def __next__(self):
         return self.next()

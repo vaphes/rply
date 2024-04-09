@@ -93,24 +93,29 @@ class BaseTestTranslation(BaseTests):
         def expr_num(p):
             return BoxInt(int(p[0].getstr()))
 
-        with self.assert_warns(
-            ParserGeneratorWarning, "1 shift/reduce conflict"
-        ):
+        with self.assert_warns(ParserGeneratorWarning, "1 shift/reduce conflict"):
             parser = pg.build()
 
         def f(n):
-            return parser.parse(iter([
-                Token("NUMBER", str(n)),
-                Token("PLUS", "+"),
-                Token("NUMBER", str(n))
-            ])).getint()
+            return parser.parse(
+                iter(
+                    [
+                        Token("NUMBER", str(n)),
+                        Token("PLUS", "+"),
+                        Token("NUMBER", str(n)),
+                    ]
+                )
+            ).getint()
 
         assert self.run(f, [12]) == 24
 
     def test_parser_state(self):
-        pg = ParserGenerator(["NUMBER", "PLUS"], precedence=[
-            ("left", ["PLUS"]),
-        ])
+        pg = ParserGenerator(
+            ["NUMBER", "PLUS"],
+            precedence=[
+                ("left", ["PLUS"]),
+            ],
+        )
 
         @pg.production("main : expression")
         def main(state, p):
@@ -131,13 +136,21 @@ class BaseTestTranslation(BaseTests):
 
         def f():
             state = ParserState()
-            return parser.parse(iter([
-                Token("NUMBER", "10"),
-                Token("PLUS", "+"),
-                Token("NUMBER", "12"),
-                Token("PLUS", "+"),
-                Token("NUMBER", "-2"),
-            ]), state=state).getint() + state.count
+            return (
+                parser.parse(
+                    iter(
+                        [
+                            Token("NUMBER", "10"),
+                            Token("PLUS", "+"),
+                            Token("NUMBER", "12"),
+                            Token("PLUS", "+"),
+                            Token("NUMBER", "-2"),
+                        ]
+                    ),
+                    state=state,
+                ).getint()
+                + state.count
+            )
 
         assert self.run(f, []) == 26
 

@@ -25,17 +25,18 @@ class TestParserGenerator(BaseTests):
             pg.build()
 
     def test_duplicate_precedence(self):
-        pg = ParserGenerator([], precedence=[
-            ("left", ["term", "term"])
-        ])
+        pg = ParserGenerator([], precedence=[("left", ["term", "term"])])
 
         with py.test.raises(ParserGeneratorError):
             pg.build()
 
     def test_invalid_associativity(self):
-        pg = ParserGenerator([], precedence=[
-            ("to-the-left", ["term"]),
-        ])
+        pg = ParserGenerator(
+            [],
+            precedence=[
+                ("to-the-left", ["term"]),
+            ],
+        )
 
         with py.test.raises(ParserGeneratorError):
             pg.build()
@@ -74,13 +75,9 @@ class TestParserGenerator(BaseTests):
 
         assert len(pg.productions) == 2
 
-        assert parser.parse(iter([
-            Token("VALUE1", "3")
-        ])) == Token("VALUE1", "3")
+        assert parser.parse(iter([Token("VALUE1", "3")])) == Token("VALUE1", "3")
 
-        assert parser.parse(iter([
-            Token("VALUE2", "3")
-        ])) == Token("VALUE2", "3")
+        assert parser.parse(iter([Token("VALUE2", "3")])) == Token("VALUE2", "3")
 
 
 class TestParserCaching(object):
@@ -96,6 +93,4 @@ class TestParserCaching(object):
         pg.build()
         parser = pg.build()
 
-        assert parser.parse(iter([
-            Token("VALUE", "3")
-        ])) == Token("VALUE", "3")
+        assert parser.parse(iter([Token("VALUE", "3")])) == Token("VALUE", "3")

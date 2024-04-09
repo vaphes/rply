@@ -12,10 +12,13 @@ class TestBoth(object):
         lg.add("PLUS", r"\+")
         lg.add("TIMES", r"\*")
 
-        pg = ParserGenerator(["NUMBER", "PLUS", "TIMES"], precedence=[
-            ("left", ["PLUS"]),
-            ("left", ["TIMES"]),
-        ])
+        pg = ParserGenerator(
+            ["NUMBER", "PLUS", "TIMES"],
+            precedence=[
+                ("left", ["PLUS"]),
+                ("left", ["TIMES"]),
+            ],
+        )
 
         @pg.production("main : expr")
         def main(p):
@@ -24,10 +27,11 @@ class TestBoth(object):
         @pg.production("expr : expr PLUS expr")
         @pg.production("expr : expr TIMES expr")
         def expr_binop(p):
-            return BoxInt({
-                "+": operator.add,
-                "*": operator.mul
-            }[p[1].getstr()](p[0].getint(), p[2].getint()))
+            return BoxInt(
+                {"+": operator.add, "*": operator.mul}[p[1].getstr()](
+                    p[0].getint(), p[2].getint()
+                )
+            )
 
         @pg.production("expr : NUMBER")
         def expr_num(p):
