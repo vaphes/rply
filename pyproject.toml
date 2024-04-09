@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "rply"
+version = "0.7.7"
+description = "A pure Python Lex/Yacc that works with RPython"
+authors = ["Alex Gaynor <alex.gaynor@gmail.com>"]
+readme = "README.rst"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.3.5"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
