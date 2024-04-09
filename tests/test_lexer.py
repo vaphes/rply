@@ -5,15 +5,15 @@ from pytest import raises
 from rply import LexerGenerator, LexingError
 
 
-class TestLexer(object):
+class TestLexer:
     def test_simple(self):
         lg = LexerGenerator()
         lg.add("NUMBER", r"\d+")
         lg.add("PLUS", r"\+")
 
-        l = lg.build()
+        lexer = lg.build()
 
-        stream = l.lex("2+3")
+        stream = lexer.lex("2+3")
         t = stream.next()
         assert t.name == "NUMBER"
         assert t.value == "2"
@@ -23,6 +23,7 @@ class TestLexer(object):
         t = stream.next()
         assert t.name == "NUMBER"
         assert t.value == "3"
+        assert t.source_pos is not None
         assert t.source_pos.idx == 2
 
         with raises(StopIteration):
@@ -34,9 +35,9 @@ class TestLexer(object):
         lg.add("PLUS", r"\+")
         lg.ignore(r"\s+")
 
-        l = lg.build()
+        lexer = lg.build()
 
-        stream = l.lex("2 + 3")
+        stream = lexer.lex("2 + 3")
         t = stream.next()
         assert t.name == "NUMBER"
         assert t.value == "2"
@@ -46,6 +47,7 @@ class TestLexer(object):
         t = stream.next()
         assert t.name == "NUMBER"
         assert t.value == "3"
+        assert t.source_pos is not None
         assert t.source_pos.idx == 4
 
         with raises(StopIteration):
@@ -57,29 +59,35 @@ class TestLexer(object):
         lg.add("PLUS", r"\+")
         lg.ignore(r"\s+")
 
-        l = lg.build()
+        lexer = lg.build()
 
-        stream = l.lex("2 + 3")
+        stream = lexer.lex("2 + 3")
         t = stream.next()
+        assert t.source_pos is not None
         assert t.source_pos.lineno == 1
         assert t.source_pos.colno == 1
         t = stream.next()
+        assert t.source_pos is not None
         assert t.source_pos.lineno == 1
         assert t.source_pos.colno == 3
         t = stream.next()
+        assert t.source_pos is not None
         assert t.source_pos.lineno == 1
         assert t.source_pos.colno == 5
         with raises(StopIteration):
             stream.next()
 
-        stream = l.lex("2 +\n    37")
+        stream = lexer.lex("2 +\n    37")
         t = stream.next()
+        assert t.source_pos is not None
         assert t.source_pos.lineno == 1
         assert t.source_pos.colno == 1
         t = stream.next()
+        assert t.source_pos is not None
         assert t.source_pos.lineno == 1
         assert t.source_pos.colno == 3
         t = stream.next()
+        assert t.source_pos is not None
         assert t.source_pos.lineno == 2
         assert t.source_pos.colno == 5
         with raises(StopIteration):
@@ -90,16 +98,19 @@ class TestLexer(object):
         lg.add("NEWLINE", r"\n")
         lg.add("SPACE", r" ")
 
-        l = lg.build()
+        lexer = lg.build()
 
-        stream = l.lex(" \n ")
+        stream = lexer.lex(" \n ")
         t = stream.next()
+        assert t.source_pos is not None
         assert t.source_pos.lineno == 1
         assert t.source_pos.colno == 1
         t = stream.next()
+        assert t.source_pos is not None
         assert t.source_pos.lineno == 1
         assert t.source_pos.colno == 2
         t = stream.next()
+        assert t.source_pos is not None
         assert t.source_pos.lineno == 2
         assert t.source_pos.colno == 1
 
@@ -107,10 +118,11 @@ class TestLexer(object):
         lg = LexerGenerator()
         lg.add("ALL", r".*", re.DOTALL)
 
-        l = lg.build()
+        lexer = lg.build()
 
-        stream = l.lex("test\ndotall")
+        stream = lexer.lex("test\ndotall")
         t = stream.next()
+        assert t.source_pos is not None
         assert t.source_pos.lineno == 1
         assert t.source_pos.colno == 1
         assert t.getstr() == "test\ndotall"
@@ -123,9 +135,9 @@ class TestLexer(object):
         lg.add("ALL", r".*", re.DOTALL)
         lg.ignore(r".*", re.DOTALL)
 
-        l = lg.build()
+        lexer = lg.build()
 
-        stream = l.lex("test\ndotall")
+        stream = lexer.lex("test\ndotall")
 
         with raises(StopIteration):
             stream.next()
@@ -134,18 +146,18 @@ class TestLexer(object):
         lg = LexerGenerator()
         lg.ignore(r"\s")
 
-        l = lg.build()
+        lexer = lg.build()
 
-        assert list(l.lex(" " * 2000)) == []
+        assert list(lexer.lex(" " * 2000)) == []
 
     def test_error(self):
         lg = LexerGenerator()
         lg.add("NUMBER", r"\d+")
         lg.add("PLUS", r"\+")
 
-        l = lg.build()
+        lexer = lg.build()
 
-        stream = l.lex("fail")
+        stream = lexer.lex("fail")
         with raises(LexingError) as excinfo:
             stream.next()
 
@@ -154,9 +166,9 @@ class TestLexer(object):
     def test_error_line_number(self):
         lg = LexerGenerator()
         lg.add("NEW_LINE", r"\n")
-        l = lg.build()
+        lexer = lg.build()
 
-        stream = l.lex("\nfail")
+        stream = lexer.lex("\nfail")
         stream.next()
         with raises(LexingError) as excinfo:
             stream.next()
@@ -167,8 +179,8 @@ class TestLexer(object):
         lg = LexerGenerator()
         lg.add("NUMBER", r"\d+")
         lg.add("PLUS", r"\+")
-        l = lg.build()
-        stream = l.lex("1+2+fail")
+        lexer = lg.build()
+        stream = lexer.lex("1+2+fail")
         stream.next()
         stream.next()
         stream.next()

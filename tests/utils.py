@@ -1,6 +1,3 @@
-from rply.token import BaseBox
-
-
 class RecordingLexer(object):
     def __init__(self, record, tokens):
         self.tokens = iter(tokens)
@@ -23,7 +20,7 @@ class RecordingLexer(object):
         return self.next()
 
 
-class BoxInt(BaseBox):
+class BoxInt:
     def __init__(self, value):
         self.value = value
 

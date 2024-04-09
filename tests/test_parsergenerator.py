@@ -1,6 +1,6 @@
 import uuid
 
-import py
+from pytest import raises
 
 from rply import ParserGenerator, Token
 from rply.errors import ParserGeneratorError
@@ -11,7 +11,7 @@ from .base import BaseTests
 class TestParserGenerator(BaseTests):
     def test_production_syntax_error(self):
         pg = ParserGenerator([])
-        with py.test.raises(ParserGeneratorError):
+        with raises(ParserGeneratorError):
             pg.production("main VALUE")
 
     def test_production_terminal_overlap(self):
@@ -21,13 +21,13 @@ class TestParserGenerator(BaseTests):
         def x(p):
             pass
 
-        with py.test.raises(ParserGeneratorError):
+        with raises(ParserGeneratorError):
             pg.build()
 
     def test_duplicate_precedence(self):
         pg = ParserGenerator([], precedence=[("left", ["term", "term"])])
 
-        with py.test.raises(ParserGeneratorError):
+        with raises(ParserGeneratorError):
             pg.build()
 
     def test_invalid_associativity(self):
@@ -38,7 +38,7 @@ class TestParserGenerator(BaseTests):
             ],
         )
 
-        with py.test.raises(ParserGeneratorError):
+        with raises(ParserGeneratorError):
             pg.build()
 
     def test_nonexistent_precedence(self):
@@ -48,7 +48,7 @@ class TestParserGenerator(BaseTests):
         def main(p):
             pass
 
-        with py.test.raises(ParserGeneratorError):
+        with raises(ParserGeneratorError):
             pg.build()
 
     def test_error_symbol(self):

@@ -10,4 +10,7 @@ class BaseTests(object):
             yield
         assert len(w) == 1
         assert w[0].category is cls
-        assert w[0].message.args[0] == message
+        if isinstance(w[0].message, str):
+            assert w[0].message == message
+        else:
+            assert w[0].message.args[0] == message

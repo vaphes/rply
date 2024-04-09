@@ -1,6 +1,6 @@
 import operator
 
-import py
+from pytest import raises
 
 from rply import ParserGenerator, ParsingError, Token
 from rply.errors import ParserGeneratorWarning
@@ -170,7 +170,7 @@ class TestParser(BaseTests):
 
         parser = pg.build()
 
-        with py.test.raises(ParsingError) as exc_info:
+        with raises(ParsingError) as exc_info:
             parser.parse(
                 iter(
                     [
@@ -179,8 +179,9 @@ class TestParser(BaseTests):
                     ]
                 )
             )
-
-        assert exc_info.value.getsourcepos().lineno == 10
+        pos = exc_info.value.getsourcepos()
+        assert pos is not None
+        assert pos.lineno == 10
         assert "SourcePosition" in repr(exc_info.value)
 
     def test_parse_error_handler(self):
@@ -198,7 +199,7 @@ class TestParser(BaseTests):
 
         token = Token("VALUE", "world")
 
-        with py.test.raises(ValueError) as exc_info:
+        with raises(ValueError) as exc_info:
             parser.parse(iter([Token("VALUE", "hello"), token]))
 
         assert exc_info.value.args[0] is token
@@ -258,7 +259,7 @@ class TestParser(BaseTests):
 
         state = ParserState()
         token = Token("VALUE", "")
-        with py.test.raises(ValueError) as exc_info:
+        with raises(ValueError) as exc_info:
             parser.parse(iter([token]), state=state)
 
         assert exc_info.value.args[0] is state

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Iterator
 
 from rply.errors import ParsingError
 
@@ -15,7 +15,7 @@ class LRParser:
     lr_table: LRTable
     error_handler: Callable
 
-    def parse(self, tokenizer: LexerStream, state=None):
+    def parse(self, tokenizer: LexerStream | Iterator, state=None):
         from rply.token import Token
 
         lookahead = None
