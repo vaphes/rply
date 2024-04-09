@@ -15,7 +15,7 @@ class Lexer:
     rules: list[Rule]
     ignore_rules: list[Rule]
 
-    def lex(self, s):
+    def lex(self, s: str):
         return LexerStream(self, s)
 
 
