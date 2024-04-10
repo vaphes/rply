@@ -28,14 +28,14 @@ class TestBoth(object):
         @pg.production("expr : expr TIMES expr")
         def expr_binop(p):
             return BoxInt(
-                {"+": operator.add, "*": operator.mul}[p[1].getstr()](
+                {"+": operator.add, "*": operator.mul}[p[1].value](
                     p[0].getint(), p[2].getint()
                 )
             )
 
         @pg.production("expr : NUMBER")
         def expr_num(p):
-            return BoxInt(int(p[0].getstr()))
+            return BoxInt(int(p[0].value))
 
         lexer = lg.build()
         parser = pg.build()

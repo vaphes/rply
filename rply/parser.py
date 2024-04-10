@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 @dataclass
 class LRParser:
     lr_table: LRTable
-    error_handler: Callable
+    error_handler: Callable | None = None
 
     def parse(self, tokenizer: LexerStream | Iterator, state=None):
         from rply.token import Token
@@ -43,7 +43,7 @@ class LRParser:
                 if lookahead is None:
                     lookahead = Token("$end", "$end")
 
-            ltype = lookahead.gettokentype()
+            ltype = lookahead.get_name()
             if ltype in self.lr_table.lr_action[current_state]:
                 t = self.lr_table.lr_action[current_state][ltype]
                 if t > 0:
@@ -69,7 +69,7 @@ class LRParser:
                         self.error_handler(state, lookahead)
                     raise AssertionError("For now, error_handler must raise.")
                 else:
-                    raise ParsingError("", lookahead.getsourcepos())
+                    raise ParsingError("", lookahead.get_position())
 
     def _reduce_production(self, t, symstack, statestack, state):
         # reduce a symbol on the stack and emit a production

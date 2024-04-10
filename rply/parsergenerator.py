@@ -5,7 +5,7 @@ import os
 import sys
 import tempfile
 import warnings
-from typing import Callable, Literal
+from typing import Any, Callable, Literal
 
 from appdirs import AppDirs
 
@@ -41,10 +41,10 @@ class ParserGenerator(object):
         cache_id: str | None = None,
     ):
         self.tokens = tokens
-        self.productions = []
+        self.productions: list[tuple[str, list[str], Callable, Any]] = []
         self.precedence = precedence
         self.cache_id = cache_id
-        self.error_handler = None
+        self.error_handler: Callable | None = None
 
     def production(self, rule: str, precedence=None):
         """
@@ -85,7 +85,7 @@ class ParserGenerator(object):
         body = " ".join(parts[2:])
         prods = body.split("|")
 
-        def inner(func):
+        def inner(func: Callable):
             for production in prods:
                 syms = production.split()
                 self.productions.append((production_name, syms, func, precedence))
@@ -104,8 +104,10 @@ class ParserGenerator(object):
         self.error_handler = func
         return func
 
-    def compute_grammar_hash(self, g):
+    def compute_grammar_hash(self, g: Grammar):
         hasher = hashlib.sha1()
+        if g.start is None:
+            raise ValueError("Grammar has no start symbol")
         hasher.update(g.start.encode())
         hasher.update(json.dumps(sorted(g.terminals)).encode())
         for term, (assoc, level) in sorted(iteritems(g.precedence)):
@@ -113,12 +115,14 @@ class ParserGenerator(object):
             hasher.update(assoc.encode())
             hasher.update(bytes(level))
         for p in g.productions:
+            if p is None:
+                continue
             hasher.update(p.name.encode())
             hasher.update(json.dumps(p.prec).encode())
             hasher.update(json.dumps(p.prod).encode())
         return hasher.hexdigest()
 
-    def serialize_table(self, table):
+    def serialize_table(self, table: "LRTable"):
         return {
             "lr_action": table.lr_action,
             "lr_goto": table.lr_goto,
@@ -133,7 +137,7 @@ class ParserGenerator(object):
             ],
         }
 
-    def data_is_valid(self, g, data):
+    def data_is_valid(self, g: Grammar, data: dict):
         if g.start != data["start"]:
             return False
         if sorted(g.terminals) != data["terminals"]:
@@ -146,6 +150,8 @@ class ParserGenerator(object):
         if len(g.productions) != len(data["productions"]):
             return False
         for p, (name, prod, (assoc, level)) in zip(g.productions, data["productions"]):
+            if p is None:
+                continue
             if p.name != name:
                 return False
             if p.prod != prod:
@@ -182,6 +188,8 @@ class ParserGenerator(object):
         g.compute_follow()
 
         table = None
+        cache_dir = None
+        cache_file = None
         if self.cache_id is not None:
             cache_dir = AppDirs("rply").user_cache_dir
             cache_file = os.path.join(
@@ -283,7 +291,7 @@ class LRTable(object):
         self.rr_conflicts = rr_conflicts
 
     @classmethod
-    def from_cache(cls, grammar, data):
+    def from_cache(cls, grammar: Grammar, data: dict):
         lr_action = [
             dict([(str(k), v) for k, v in iteritems(action)])
             for action in data["lr_action"]
@@ -301,7 +309,7 @@ class LRTable(object):
         )
 
     @classmethod
-    def from_grammar(cls, grammar):
+    def from_grammar(cls, grammar: Grammar):
         cidhash = IdentityDict()
         goto_cache = {}
         add_count = Counter()

@@ -23,8 +23,8 @@ class TestLexer:
         t = stream.next()
         assert t.name == "NUMBER"
         assert t.value == "3"
-        assert t.source_pos is not None
-        assert t.source_pos.idx == 2
+        assert t.position is not None
+        assert t.position.index == 2
 
         with raises(StopIteration):
             stream.next()
@@ -47,8 +47,8 @@ class TestLexer:
         t = stream.next()
         assert t.name == "NUMBER"
         assert t.value == "3"
-        assert t.source_pos is not None
-        assert t.source_pos.idx == 4
+        assert t.position is not None
+        assert t.position.index == 4
 
         with raises(StopIteration):
             stream.next()
@@ -63,33 +63,33 @@ class TestLexer:
 
         stream = lexer.lex("2 + 3")
         t = stream.next()
-        assert t.source_pos is not None
-        assert t.source_pos.lineno == 1
-        assert t.source_pos.colno == 1
+        assert t.position is not None
+        assert t.position.line == 1
+        assert t.position.column == 1
         t = stream.next()
-        assert t.source_pos is not None
-        assert t.source_pos.lineno == 1
-        assert t.source_pos.colno == 3
+        assert t.position is not None
+        assert t.position.line == 1
+        assert t.position.column == 3
         t = stream.next()
-        assert t.source_pos is not None
-        assert t.source_pos.lineno == 1
-        assert t.source_pos.colno == 5
+        assert t.position is not None
+        assert t.position.line == 1
+        assert t.position.column == 5
         with raises(StopIteration):
             stream.next()
 
         stream = lexer.lex("2 +\n    37")
         t = stream.next()
-        assert t.source_pos is not None
-        assert t.source_pos.lineno == 1
-        assert t.source_pos.colno == 1
+        assert t.position is not None
+        assert t.position.line == 1
+        assert t.position.column == 1
         t = stream.next()
-        assert t.source_pos is not None
-        assert t.source_pos.lineno == 1
-        assert t.source_pos.colno == 3
+        assert t.position is not None
+        assert t.position.line == 1
+        assert t.position.column == 3
         t = stream.next()
-        assert t.source_pos is not None
-        assert t.source_pos.lineno == 2
-        assert t.source_pos.colno == 5
+        assert t.position is not None
+        assert t.position.line == 2
+        assert t.position.column == 5
         with raises(StopIteration):
             stream.next()
 
@@ -102,17 +102,17 @@ class TestLexer:
 
         stream = lexer.lex(" \n ")
         t = stream.next()
-        assert t.source_pos is not None
-        assert t.source_pos.lineno == 1
-        assert t.source_pos.colno == 1
+        assert t.position is not None
+        assert t.position.line == 1
+        assert t.position.column == 1
         t = stream.next()
-        assert t.source_pos is not None
-        assert t.source_pos.lineno == 1
-        assert t.source_pos.colno == 2
+        assert t.position is not None
+        assert t.position.line == 1
+        assert t.position.column == 2
         t = stream.next()
-        assert t.source_pos is not None
-        assert t.source_pos.lineno == 2
-        assert t.source_pos.colno == 1
+        assert t.position is not None
+        assert t.position.line == 2
+        assert t.position.column == 1
 
     def test_regex_flags(self):
         lg = LexerGenerator()
@@ -122,10 +122,10 @@ class TestLexer:
 
         stream = lexer.lex("test\ndotall")
         t = stream.next()
-        assert t.source_pos is not None
-        assert t.source_pos.lineno == 1
-        assert t.source_pos.colno == 1
-        assert t.getstr() == "test\ndotall"
+        assert t.position is not None
+        assert t.position.line == 1
+        assert t.position.column == 1
+        assert t.get_value() == "test\ndotall"
 
         with raises(StopIteration):
             stream.next()
@@ -173,7 +173,7 @@ class TestLexer:
         with raises(LexingError) as excinfo:
             stream.next()
 
-        assert excinfo.value.source_pos.lineno == 2
+        assert excinfo.value.source_position.line == 2
 
     def test_error_column_number(self):
         lg = LexerGenerator()
@@ -188,4 +188,4 @@ class TestLexer:
         with raises(LexingError) as excinfo:
             stream.next()
 
-        assert excinfo.value.source_pos.colno == 4
+        assert excinfo.value.source_position.column == 4

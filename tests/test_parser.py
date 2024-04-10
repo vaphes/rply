@@ -181,7 +181,7 @@ class TestParser(BaseTests):
             )
         pos = exc_info.value.getsourcepos()
         assert pos is not None
-        assert pos.lineno == 10
+        assert pos.line == 10
         assert "SourcePosition" in repr(exc_info.value)
 
     def test_parse_error_handler(self):
